@@ -61,6 +61,7 @@ namespace FFMpegSharp.Helpers
             public static readonly string WebM = ".webm";
             public static readonly string Ogv = ".ogv";
             public static readonly string Png = ".png";
+            public static readonly string Gif = ".gif";
         }
     }
 }

@@ -384,13 +384,13 @@ namespace FFMpegSharp.FFMPEG
             foreach (var frame in imagesList)
             {
                 tw.WriteLine("file '{0}'", frame.Path);
-                tw.WriteLine("duration 0.09");
+                tw.WriteLine("duration 0.1");
             }
 
             tw.Close();
 
             var args = Arguments.Input(new Uri(file), true) +
-                       Arguments.FramePerSeconds(20) +
+                       Arguments.FramePerSeconds(25) +
                        Arguments.Size(size) +
                        Arguments.AddCodecFormImages() +
                        Arguments.Output(output);

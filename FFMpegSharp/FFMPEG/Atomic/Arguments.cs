@@ -141,7 +141,7 @@ namespace FFMpegSharp.FFMPEG.Atomic
 
         internal static string AddCodecFormImages()
         {
-            return "-vcodec libx264 -crf 25 -pix_fmt yuv420p ";
+            return "-vcodec libx264 -crf 1 -pix_fmt yuv420p -b 800k ";
         }
 
         internal static string FrameOutputCount(int number)

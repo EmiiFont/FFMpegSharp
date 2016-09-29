@@ -30,13 +30,13 @@ namespace FFMpegSharp.Example
 
 
 
-            encoder.CreateVideoFromImages(list, new FileInfo(_path + "\\test.mp4"), 10, 1280, 790);
             // Bind Progress Handler
             encoder.OnProgress += percentage => { Console.WriteLine("Progress {0}%", percentage); };
+            encoder.CreateVideoFromImages(list, new FileInfo(_path + "\\test.mp4"), 10, 1280, 790);
+
             //// Start Encoding
             //var input = new VideoInfo("D:\\Typly\\typly.mp4");
             //encoder.ToGif(input, new FileInfo(input.FullName.Replace(input.Extension, ".gif")));
         }
-    }
     }
 }
