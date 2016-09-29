@@ -7,6 +7,8 @@ using FFMpegSharp.FFMPEG.Atomic;
 using FFMpegSharp.FFMPEG.Enums;
 using FFMpegSharp.FFMPEG.Exceptions;
 using FFMpegSharp.Helpers;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FFMpegSharp.FFMPEG
 {
@@ -43,7 +45,7 @@ namespace FFMpegSharp.FFMPEG
         public bool Snapshot(VideoInfo source, FileInfo output, Size? size = null, TimeSpan? captureTime = null)
         {
             if (captureTime == null)
-                captureTime = TimeSpan.FromSeconds(source.Duration.TotalSeconds/3);
+                captureTime = TimeSpan.FromSeconds(source.Duration.TotalSeconds / 3);
 
             if (output.Extension.ToLower() != FfMpegHelper.Extensions.Png)
                 output = new FileInfo(output.FullName.Replace(output.Extension, FfMpegHelper.Extensions.Png));
@@ -57,16 +59,16 @@ namespace FFMpegSharp.FFMPEG
             {
                 if (size.Value.Width == 0)
                 {
-                    var ratio = source.Width/(double) size.Value.Width;
+                    var ratio = source.Width / (double)size.Value.Width;
 
-                    size = new Size((int) (source.Width*ratio), (int) (source.Height*ratio));
+                    size = new Size((int)(source.Width * ratio), (int)(source.Height * ratio));
                 }
 
                 if (size.Value.Height == 0)
                 {
-                    var ratio = source.Height/(double) size.Value.Height;
+                    var ratio = source.Height / (double)size.Value.Height;
 
-                    size = new Size((int) (source.Width*ratio), (int) (source.Height*ratio));
+                    size = new Size((int)(source.Width * ratio), (int)(source.Height * ratio));
                 }
             }
 
@@ -106,6 +108,29 @@ namespace FFMpegSharp.FFMPEG
                                  Arguments.Video(VideoCodec.LibX264, 2400) +
                                  Arguments.Speed(speed) +
                                  Arguments.Audio(AudioCodec.Aac, aQuality) +
+                                 Arguments.Output(output);
+
+            return RunProcess(conversionArgs, output);
+        }
+
+        /// <summary>
+        ///     Converts a source video to Gif format.
+        /// </summary>
+        /// <param name="source">Source video file.</param>
+        /// <param name="output">Output video file.</param>
+        /// <param name="bitrate">Gif quality bitrate.</param>
+        /// <param name="multithread">Use multithreading for conversion.</param>
+        /// <returns>Success state.</returns>
+        public bool ToGif(VideoInfo source, FileInfo output, int bitrate = 2048, bool multithread = false)
+        {
+            _totalTime = source.Duration;
+
+            FfMpegHelper.ConversionExceptionCheck(source, output);
+            FfMpegHelper.ExtensionExceptionCheck(output, FfMpegHelper.Extensions.Gif);
+
+            var conversionArgs = Arguments.Input(source) +
+                                 Arguments.Threads(multithread) +
+                                 Arguments.GifBitRate(bitrate) +
                                  Arguments.Output(output);
 
             return RunProcess(conversionArgs, output);
@@ -323,6 +348,58 @@ namespace FFMpegSharp.FFMPEG
             return RunProcess(args, output);
         }
 
+        public bool CreateVideoFromImages(IEnumerable<ImageInfo> imagesList, FileInfo output, int framePerSeconds, int? width = null, int? height = null)
+        {
+
+            //-r 6: 6 frame per seconds
+            //- b 320k: 320kbps bitrate
+            //-i % 04d.jpg: input file(s)
+            // - s 480x360: out video size(width x height)
+            // - vcodec libx264: what video codec will be used
+
+            //take video resolution from the image file
+            //all image file has to be same size.
+
+            var image = imagesList.First();
+
+            var size = new Size();
+
+            if (width == null || height == null)
+            {
+                size.Height = image.ImageBitmap.Height;
+                size.Width = image.ImageBitmap.Width;
+            }
+            else
+            {
+                size.Height = height.Value;
+                size.Width = width.Value;
+            }
+
+            var fileConcatPath = Path.GetDirectoryName(image.Path);
+
+            var file = fileConcatPath + "\\fileConcat.txt";
+
+            TextWriter tw = new StreamWriter(file);
+
+            foreach (var frame in imagesList)
+            {
+                tw.WriteLine("file '{0}'", frame.Path);
+                tw.WriteLine("duration 0.09");
+            }
+
+            tw.Close();
+
+            var args = Arguments.Input(new Uri(file), true) +
+                       Arguments.FramePerSeconds(20) +
+                       Arguments.Size(size) +
+                       Arguments.AddCodecFormImages() +
+                       Arguments.Output(output);
+
+            //-f concat -i input.txt output.webm
+
+            return RunProcess(args, output);
+        }
+
         /// <summary>
         ///     Stops any current job that FFMpeg is running.
         /// </summary>
@@ -397,7 +474,7 @@ namespace FFMpegSharp.FFMPEG
             if (!m.Success) return;
 
             var t = TimeSpan.Parse(m.Value);
-            var percentage = Math.Round(t.TotalSeconds/_totalTime.TotalSeconds*100, 2);
+            var percentage = Math.Round(t.TotalSeconds / _totalTime.TotalSeconds * 100, 2);
             OnProgress(percentage);
         }
 

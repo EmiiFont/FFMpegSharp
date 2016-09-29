@@ -12,6 +12,12 @@ namespace FFMpegSharp.FFMPEG.Atomic
             return $"-preset {speed.ToString().ToLower()} ";
         }
 
+
+        internal static string GifBitRate(int bitrate)
+        {
+            return $"-b {bitrate}k ";
+        }
+
         internal static string Speed(int cpu)
         {
             return $"-quality good -cpu-used {cpu} -deadline realtime ";
@@ -19,7 +25,7 @@ namespace FFMpegSharp.FFMPEG.Atomic
 
         internal static string Audio(AudioCodec codec, AudioQuality bitrate)
         {
-            return $"-codec:a {codec.ToString().ToLower()} -b:a {(int) bitrate}k -strict experimental ";
+            return $"-codec:a {codec.ToString().ToLower()} -b:a {(int)bitrate}k -strict experimental ";
         }
 
         internal static string Video(VideoCodec codec, int bitrate = 0)
@@ -44,6 +50,11 @@ namespace FFMpegSharp.FFMPEG.Atomic
         internal static string Input(Uri uri)
         {
             return $"-i \"{uri.AbsoluteUri}\" ";
+        }
+
+        internal static string Input(Uri uri, bool useConcat = false)
+        {
+            return useConcat ? $"-f concat -i \"{uri.LocalPath}\" " : $"-i \"{uri.LocalPath}\" ";
         }
 
         internal static string Disable(Channel type)
@@ -76,7 +87,7 @@ namespace FFMpegSharp.FFMPEG.Atomic
 
         internal static string Scale(VideoSize size)
         {
-            return size == VideoSize.Original ? string.Empty : $"-vf scale={(int) size} ";
+            return size == VideoSize.Original ? string.Empty : $"-vf scale={(int)size} ";
         }
 
         internal static string Size(Size? size)
@@ -118,10 +129,19 @@ namespace FFMpegSharp.FFMPEG.Atomic
                     return "-c copy ";
             }
         }
+        internal static string FramePerSeconds(int fps)
+        {
+            return $"-r {fps} ";
+        }
 
         internal static string Seek(TimeSpan? seek)
         {
             return !seek.HasValue ? string.Empty : $"-ss {seek} ";
+        }
+
+        internal static string AddCodecFormImages()
+        {
+            return "-vcodec libx264 -crf 25 -pix_fmt yuv420p ";
         }
 
         internal static string FrameOutputCount(int number)
@@ -142,6 +162,11 @@ namespace FFMpegSharp.FFMPEG.Atomic
         public static string InputConcat(string[] paths)
         {
             return $"-i \"concat:{string.Join(@"|", paths)}\" ";
+        }
+
+        internal static string FrameRate(string framerate)
+        {
+            return $"-framerate {framerate} ";
         }
     }
 }
