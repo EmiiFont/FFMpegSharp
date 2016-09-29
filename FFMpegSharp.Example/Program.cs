@@ -4,6 +4,7 @@ using System.Linq;
 using FFMpegSharp.FFMPEG;
 using System.Configuration;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace FFMpegSharp.Example
 {
