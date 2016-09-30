@@ -13,7 +13,7 @@ namespace FFMpegSharp.FFMPEG
         protected FFBase()
         {
             ConfiguredRoot = ConfigurationManager.AppSettings["ffmpegRoot"];
-
+            
             if (ConfiguredRoot.EndsWith("\\"))
                 ConfiguredRoot = ConfiguredRoot.Substring(0, ConfiguredRoot.Length - 1);
         }
@@ -42,6 +42,24 @@ namespace FFMpegSharp.FFMPEG
                 }
 
                 return !processHasExited && Process.GetProcesses().Any(x => x.Id == Process.Id);
+            }
+        }
+
+        /// <summary>
+        /// Returns the root path of the running application
+        /// </summary>
+        public string ApplicationPath
+        {
+            get
+            {
+                if (String.IsNullOrEmpty(AppDomain.CurrentDomain.RelativeSearchPath))
+                {
+                    return AppDomain.CurrentDomain.BaseDirectory; //exe folder for WinForms, Consoles, Windows Services
+                }
+                else
+                {
+                    return AppDomain.CurrentDomain.RelativeSearchPath; //bin folder for Web Apps 
+                }
             }
         }
 

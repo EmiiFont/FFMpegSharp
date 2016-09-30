@@ -24,6 +24,13 @@ namespace FFMpegSharp.Helpers
                     $"Input {originalVideo.FullName} does not exist!");
         }
 
+        public static void ConversionExceptionCheck(FileInfo convertedPath)
+        {
+            if (File.Exists(convertedPath.FullName))
+                throw new FFMpegException(FFMpegExceptionType.File,
+                    $"The output file: {convertedPath} already exists!");
+        }
+
         public static void InputFilesExistExceptionCheck(params FileInfo[] paths)
         {
             foreach (var path in paths)

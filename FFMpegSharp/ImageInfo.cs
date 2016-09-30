@@ -11,5 +11,6 @@ namespace FFMpegSharp
     {
         public string Path { get; set; }
         public Bitmap ImageBitmap { get; set; }
+        public double Duration { get; set; }
     }
 }

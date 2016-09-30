@@ -21,12 +21,14 @@ namespace FFMpegSharp.FFMPEG
         /// </summary>
         public FFMpeg()
         {
-            FfMpegHelper.RootExceptionCheck(ConfiguredRoot);
-            FfProbeHelper.RootExceptionCheck(ConfiguredRoot);
+            string completePath = ApplicationPath + ConfiguredRoot;
+
+            FfMpegHelper.RootExceptionCheck(completePath);
+            FfProbeHelper.RootExceptionCheck(completePath);
 
             var target = Environment.Is64BitProcess ? "x64" : "x86";
 
-            _ffmpegPath = ConfiguredRoot + $"\\{target}\\ffmpeg.exe";
+            _ffmpegPath = completePath + $"\\{target}\\ffmpeg.exe";
         }
 
         /// <summary>
@@ -347,23 +349,30 @@ namespace FFMpegSharp.FFMPEG
 
             return RunProcess(args, output);
         }
-
-        public bool CreateVideoFromImages(IEnumerable<ImageInfo> imagesList, FileInfo output, int framePerSeconds, int? width = null, int? height = null)
+        /// <summary>
+        /// Convert a series of images to a video format
+        /// </summary>
+        /// <param name="imagesList">the list of images (frames) to process</param>
+        /// <param name="output">output file name</param>
+        /// <param name="framePerSeconds">The output frame rate for the video stream default is 25 fps</param>
+        /// <param name="width">the width of the video</param>
+        /// <param name="height">the heigh of the video</param>
+        /// <returns></returns>
+        public bool CreateVideoFromImages(IEnumerable<ImageInfo> imagesList, FileInfo output, int framePerSeconds = 25, int? width = null, int? height = null)
         {
 
-            //-r 6: 6 frame per seconds
-            //- b 320k: 320kbps bitrate
-            //-i % 04d.jpg: input file(s)
-            // - s 480x360: out video size(width x height)
-            // - vcodec libx264: what video codec will be used
+            var image = imagesList.FirstOrDefault();
 
-            //take video resolution from the image file
-            //all image file has to be same size.
+            if (image == null)
+            {
+                throw new FFMpegException(FFMpegExceptionType.File, $"Image list can't be empty");
+            }
 
-            var image = imagesList.First();
+            FfMpegHelper.ConversionExceptionCheck(output);
 
             var size = new Size();
 
+            //use default images width and height
             if (width == null || height == null)
             {
                 size.Height = image.ImageBitmap.Height;
@@ -384,18 +393,16 @@ namespace FFMpegSharp.FFMPEG
             foreach (var frame in imagesList)
             {
                 tw.WriteLine("file '{0}'", frame.Path);
-                tw.WriteLine("duration 0.1");
+                tw.WriteLine("duration {0}", frame.Duration);
             }
 
             tw.Close();
 
             var args = Arguments.Input(new Uri(file), true) +
-                       Arguments.FramePerSeconds(25) +
+                       Arguments.FramePerSeconds(framePerSeconds) +
                        Arguments.Size(size) +
                        Arguments.AddCodecFormImages() +
                        Arguments.Output(output);
-
-            //-f concat -i input.txt output.webm
 
             return RunProcess(args, output);
         }
